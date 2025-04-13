@@ -27,3 +27,5 @@ print(q_table)
 #     print("action: {}, reward: {}".format(action, reward))
 
 # env.close()
+
+# pushing from Predator
