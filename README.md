@@ -1,2 +1,5 @@
 # AI-plays-Snake
-Al learns to play Sanke game
+
+TO DO:
+
+- [ ] Create a working snake game using PyGame

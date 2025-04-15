@@ -1,19 +1,4 @@
-import gymnasium as gym
-import random
+from snake_game import run_snake_game
 
-def pick_sample():
-    return random.randint(0, 1)
-
-env = gym.make("CartPole-v1", render_mode="human")  # Changed render_mode to "human"
-for i in range(1):
-    print("start episode {}".format(i))
-    done = False
-    s, _ = env.reset()
-    
-    while not done:
-        a = pick_sample()
-        s, r, term, trunc, _ = env.step(a)
-        done = term or trunc
-        print("action: {},  reward: {}".format(a, r))
-        print("state: {}, {}, {}, {}".format(s[0], s[1], s[2], s[3]))
-env.close()
+if __name__ == "__main__":
+    run_snake_game()
