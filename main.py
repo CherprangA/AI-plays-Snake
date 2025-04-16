@@ -28,11 +28,9 @@ print("Starting the game")
 
 # Game loop
 running = True
-x = 0
-
-def get_color():
-    colors = [BLUE, WHITE, RED, GREEN]
-    return random.choice(colors)
+x = 100
+y = 100
+current_direction = "right"
     
 while running:
     pygame.event.pump()  # Ensure events are processed
@@ -44,10 +42,34 @@ while running:
     screen.fill(WHITE)    
     
     # Draw a moving blue rectangle
-    pygame.draw.rect(screen, get_color(), (x, 200, 60, 60))
-    x += 2
+    pygame.draw.rect(screen,BLUE, (x, y, 60, 60))
     if x > 640:
         x = -60
+    if y > 480:
+        y = -60
+        
+    if current_direction == "right":
+        x += 2
+    elif current_direction == "left":
+        x -= 2
+    elif current_direction == "up":
+        y -= 2
+    elif current_direction == "down":
+        y += 2
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_w]:  # Move up
+        y -= 2
+        current_direction = "up"
+    if keys[pygame.K_s]:  # Move down
+        y += 2
+        current_direction = "down"
+    if keys[pygame.K_a]:  # Move left
+        x -= 2
+        current_direction = "left"
+    if keys[pygame.K_d]:  # Move right
+        x += 2
+        current_direction = "right"
 
     # Update display
     pygame.display.update()  # Use update instead of flip
