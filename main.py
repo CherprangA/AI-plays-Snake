@@ -4,6 +4,13 @@ import random
 import time
 import json
 import pickle
+
+# pygbag only degbug statemtents
+# Uncomment the following line if you want to use pygbag for debugging
+# import js
+
+# js.console.log("This is a debug message")
+
 from RL_agent import SimpleAgent
 
 from scripts import snake_mechanics
@@ -80,10 +87,10 @@ while running:
         COLLISION_WITH_FOOD = False 
     pygame.draw.rect(screen, RED, (food_x, food_y, 60, 60))
     
-    # Simulate the agent's actions
-    observation = [x / WIDTH, y / HEIGHT, food_x / WIDTH, food_y / HEIGHT]  # Normalize positions
-    action = agent.predict(observation)
-    print(f"Agent chose action: {action}")
+    # # Simulate the agent's actions
+    # observation = [x / WIDTH, y / HEIGHT, food_x / WIDTH, food_y / HEIGHT]  # Normalize positions
+    # action = agent.predict(observation)
+    # print(f"Agent chose action: {action}")
     
     
     # Prevent the box from going out of bounds
@@ -113,11 +120,11 @@ while running:
     directions = [keys[pygame.K_a], keys[pygame.K_d], keys[pygame.K_w], keys[pygame.K_s]]
     current_direction = snake_mechanics.get_direction(directions, current_direction)
     
-    # Simulate the environment for 10 timesteps
-    for step in range(10):
-        observation = [0.0, 0.1, 0.2, 0.3]  # Dummy observation for testing
-        action = agent.predict(observation)
-        print(f"Step {step + 1}: Agent chose action {action}")
+    # # Simulate the environment for 10 timesteps
+    # for step in range(10):
+    #     observation = [0.0, 0.1, 0.2, 0.3]  # Dummy observation for testing
+    #     action = agent.predict(observation)
+    #     # print(f"Step {step + 1}: Agent chose action {action}")
 
     # time.sleep(1)  # Slow down the loop for better visibility
 
