@@ -2,8 +2,22 @@ import pygame
 import sys
 import random
 import time
+import json
+import pickle
+from RL_agent import SimpleAgent
 
 from scripts import snake_mechanics
+
+# Load the action space
+with open("action_space.json", "r") as f:
+    action_space_data = json.load(f)
+num_actions = action_space_data["num_actions"]
+print(f"✅ Action space loaded: {num_actions} actions")
+
+# Load the RL agent
+with open("rl_agent.pkl", "rb") as f:
+    agent = pickle.load(f)
+print("✅ RL agent loaded successfully!")
 
 # Initialize Pygame
 pygame.init()
@@ -66,9 +80,10 @@ while running:
         COLLISION_WITH_FOOD = False 
     pygame.draw.rect(screen, RED, (food_x, food_y, 60, 60))
     
-    
-    
-    
+    # Simulate the agent's actions
+    observation = [x / WIDTH, y / HEIGHT, food_x / WIDTH, food_y / HEIGHT]  # Normalize positions
+    action = agent.predict(observation)
+    print(f"Agent chose action: {action}")
     
     
     # Prevent the box from going out of bounds
@@ -97,6 +112,12 @@ while running:
     
     directions = [keys[pygame.K_a], keys[pygame.K_d], keys[pygame.K_w], keys[pygame.K_s]]
     current_direction = snake_mechanics.get_direction(directions, current_direction)
+    
+    # Simulate the environment for 10 timesteps
+    for step in range(10):
+        observation = [0.0, 0.1, 0.2, 0.3]  # Dummy observation for testing
+        action = agent.predict(observation)
+        print(f"Step {step + 1}: Agent chose action {action}")
 
     # time.sleep(1)  # Slow down the loop for better visibility
 
