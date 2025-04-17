@@ -1,6 +1,9 @@
 import pygame
 import sys
 import random
+import time
+
+from scripts import snake_mechanics
 
 # Initialize Pygame
 pygame.init()
@@ -8,7 +11,16 @@ pygame.init()
 # Set up the screen
 
 # small window for testing
-screen = pygame.display.set_mode((800, 600))
+WIDTH = 1200
+HEIGHT = 900
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+# snake moving distance in single step
+MOVE_DISTANCE = 5
+
+# detecte collision with food
+COLLISION_WITH_FOOD = False
+
 
 # Full screen for deployment
 # screen_info = pygame.display.Info()
@@ -30,8 +42,10 @@ print("Starting the game")
 running = True
 x = 100
 y = 100
+food_x = random.randint(0, WIDTH - 60)
+food_y = random.randint(0, HEIGHT - 60)
 current_direction = "right"
-    
+
 while running:
     pygame.event.pump()  # Ensure events are processed
     for event in pygame.event.get():
@@ -41,35 +55,50 @@ while running:
     # Fill the screen with white
     screen.fill(WHITE)    
     
-    # Draw a moving blue rectangle
-    pygame.draw.rect(screen,BLUE, (x, y, 60, 60))
-    if x > 640:
-        x = -60
-    if y > 480:
-        y = -60
+    
+    # Draw the snake
+    pygame.draw.rect(screen, BLUE, (x, y, 60, 60))
+    
+    # Draw the food
+    if COLLISION_WITH_FOOD:
+        food_x = random.randint(0, WIDTH - 60)
+        food_y = random.randint(0, HEIGHT - 60)   
+        COLLISION_WITH_FOOD = False 
+    pygame.draw.rect(screen, RED, (food_x, food_y, 60, 60))
+    
+    
+    
+    
+    
+    
+    # Prevent the box from going out of bounds
+    if x >= WIDTH - 60:
+        x = WIDTH - 60
+    if y >= HEIGHT - 60:
+        y = HEIGHT - 60
+    if x <= 0:
+        x = 0
+    if y <= 0:
+        y = 0
+    
         
     if current_direction == "right":
-        x += 2
+        x += MOVE_DISTANCE
     elif current_direction == "left":
-        x -= 2
+        x -= MOVE_DISTANCE
     elif current_direction == "up":
-        y -= 2
+        y -= MOVE_DISTANCE
     elif current_direction == "down":
-        y += 2
-
+        y += MOVE_DISTANCE
+        
+    COLLISION_WITH_FOOD = snake_mechanics.check_collision(x, y, food_x, food_y)
+    
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:  # Move up
-        y -= 2
-        current_direction = "up"
-    if keys[pygame.K_s]:  # Move down
-        y += 2
-        current_direction = "down"
-    if keys[pygame.K_a]:  # Move left
-        x -= 2
-        current_direction = "left"
-    if keys[pygame.K_d]:  # Move right
-        x += 2
-        current_direction = "right"
+    
+    directions = [keys[pygame.K_a], keys[pygame.K_d], keys[pygame.K_w], keys[pygame.K_s]]
+    current_direction = snake_mechanics.get_direction(directions, current_direction)
+
+    # time.sleep(1)  # Slow down the loop for better visibility
 
     # Update display
     pygame.display.update()  # Use update instead of flip

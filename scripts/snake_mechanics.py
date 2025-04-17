@@ -1,41 +1,25 @@
 import pygame
 
-class Movement:
-    def __init__(self, x, y, keys):
-        self.x = x
-        self.y = y
-        self.keys = keys
         
-    def new_position(self, x, y, keys, current_direction):
-        if keys[pygame.K_LEFT]:
-            x -= 2
-            current_direction = "left"
-        if keys[pygame.K_RIGHT]:
-            x += 2
-            current_direction = "right"
-        if keys[pygame.K_UP]:
-            y -= 2
-            current_direction = "up"
-        if keys[pygame.K_DOWN]:
-            y += 2
-            current_direction = "down"
+def get_direction(directions, current_direction):
+
+
+    current_direction = current_direction # Default direction
+    if directions[0]:
+        current_direction = "left"
         
-        if not keys[pygame.K_LEFT] and not keys[pygame.K_RIGHT] and not keys[pygame.K_UP] and not keys[pygame.K_DOWN]:
-            if current_direction == "left":
-                x -= 2
-            elif current_direction == "right":
-                x += 2
-            elif current_direction == "up":
-                y -= 2
-            elif current_direction == "down":
-                y += 2
+    if directions[1]:
+        current_direction = "right"
         
-            
-        if x > 640:
-            x = -60
-        if y > 480:
-            y = -60
-            
-        print(x, y, current_direction, "*")
+    if directions[2]:
+        current_direction = "up"
         
-        return (x, y, current_direction)
+    if directions[3]:            
+        current_direction = "down"
+    
+    return current_direction
+
+def check_collision(x, y, food_x, food_y):
+    if x < food_x + 60 and x + 60 > food_x and y < food_y + 60 and y + 60 > food_y:
+        return True
+    return False
