@@ -23,6 +23,7 @@ model = PPO("MlpPolicy", env, verbose=1, device="cpu")  # Force CPU usage
 print("🚀 Training the RL agent...")
 # Define total timesteps
 total_timesteps = int(1e10)
+total_timesteps = 100000
 
 # Create a progress bar
 with tqdm(total=total_timesteps, desc="Training Progress", unit="step") as pbar:
@@ -45,10 +46,10 @@ torch.save(policy, "snake_policy_full.pth")
 print("✅ Policy weights saved to snake_policy_full.pth")
 
 # Test the trained model
-print("🎮 Testing the trained agent...")
-obs = env.reset()
-done = False
-while not done:
-    action, _ = model.predict(obs)
-    obs, reward, done, info = env.step(action)
-    env.render()
+# print("🎮 Testing the trained agent...")
+# obs = env.reset()
+# done = False
+# while not done:
+#     action, _ = model.predict(obs)
+#     obs, reward, done, info = env.step(action)
+#     env.render()
