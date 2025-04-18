@@ -61,7 +61,7 @@ class SnakeEnv(gym.Env):
         # Check for collisions
         if head_x < 0 or head_x >= self.num_cols or head_y < 0 or head_y >= self.num_rows or (head_x, head_y) in self.snake:
             self.done = True
-            return self._get_observation(), -1, self.done, {}  # Negative reward for dying
+            return self._get_observation(), -10, self.done, {}  # Negative reward for dying
 
         # Add new head position
         self.snake.insert(0, (head_x, head_y))
@@ -70,10 +70,10 @@ class SnakeEnv(gym.Env):
         if (head_x, head_y) == self.food:
             self.food = (random.randint(0, self.num_cols - 1), random.randint(0, self.num_rows - 1))
             self.score += 1
-            reward = 1  # Positive reward for eating food
+            reward = 10  # Positive reward for eating food
         else:
             self.snake.pop()  # Remove tail
-            reward = 0  # Neutral reward for moving
+            reward = -0.1  # Neutral reward for moving
 
         return self._get_observation(), reward, self.done, {}
 

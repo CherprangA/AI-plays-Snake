@@ -18,9 +18,9 @@ with open("snake_action_space.json", "w") as f:
 print("✅ Action space saved to snake_action_space.json")
 
 # Train the RL agent using PPO
-model = PPO("MlpPolicy", env, verbose=1)
+model = PPO("MlpPolicy", env, verbose=1, device="cpu")  # Force CPU usage
 print("🚀 Training the RL agent...")
-model.learn(total_timesteps=10000)
+model.learn(total_timesteps=1000000)
 print("✅ Training completed!")
 
 # Save the trained model using stable-baselines3's save method
