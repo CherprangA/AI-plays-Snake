@@ -2,6 +2,7 @@ import json
 import torch
 from stable_baselines3 import PPO
 from snake_env import SnakeEnv
+from tqdm import tqdm
 
 # Initialize the Snake environment
 env = SnakeEnv()
@@ -20,7 +21,18 @@ print("✅ Action space saved to snake_action_space.json")
 # Train the RL agent using PPO
 model = PPO("MlpPolicy", env, verbose=1, device="cpu")  # Force CPU usage
 print("🚀 Training the RL agent...")
-model.learn(total_timesteps=1000000)
+# Define total timesteps
+total_timesteps = int(1e10)
+
+# Create a progress bar
+with tqdm(total=total_timesteps, desc="Training Progress", unit="step") as pbar:
+    def callback(_locals, _globals):
+        pbar.n = _locals["self"].num_timesteps
+        pbar.update(0)
+        return True
+
+    # Train the model with the callback
+    model.learn(total_timesteps=total_timesteps, callback=callback)
 print("✅ Training completed!")
 
 # Save the trained model using stable-baselines3's save method
