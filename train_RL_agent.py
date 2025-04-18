@@ -1,0 +1,42 @@
+import json
+import torch
+from stable_baselines3 import PPO
+from snake_env import SnakeEnv
+
+# Initialize the Snake environment
+env = SnakeEnv()
+
+# Define the action space (0: up, 1: down, 2: left, 3: right)
+action_space = {
+    "actions": ["up", "down", "left", "right"],
+    "num_actions": 4
+}
+
+# Save the action space to a JSON file
+with open("snake_action_space.json", "w") as f:
+    json.dump(action_space, f)
+print("✅ Action space saved to snake_action_space.json")
+
+# Train the RL agent using PPO
+model = PPO("MlpPolicy", env, verbose=1)
+print("🚀 Training the RL agent...")
+model.learn(total_timesteps=10000)
+print("✅ Training completed!")
+
+# Save the trained model using stable-baselines3's save method
+model.save("snake_rl_agent")
+print("✅ Trained RL agent saved to snake_rl_agent.zip")
+
+# Extract and save the policy weights
+policy = model.policy
+torch.save(policy, "snake_policy_full.pth")
+print("✅ Policy weights saved to snake_policy_full.pth")
+
+# Test the trained model
+print("🎮 Testing the trained agent...")
+obs = env.reset()
+done = False
+while not done:
+    action, _ = model.predict(obs)
+    obs, reward, done, info = env.step(action)
+    env.render()
