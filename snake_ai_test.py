@@ -26,12 +26,12 @@ class SnakePolicy(nn.Module):
 input_dim = 5  # Observation space size
 output_dim = 4  # Action space size
 policy = SnakePolicy(input_dim, output_dim)
-policy = torch.load("snake_policy_full.pth", weights_only=False)
+policy = torch.load("data/model/snake_policy_full.pth", weights_only=False)
 policy.eval()
 print("✅ Policy loaded successfully!")
 
 # Load the action space
-with open("snake_action_space.json", "r") as f:
+with open("data/action_space/snake_action_space.json", "r") as f:
     action_space = json.load(f)
 print(f"✅ Action space loaded: {action_space['num_actions']} actions")
 
