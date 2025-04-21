@@ -1,55 +1,32 @@
 import json
-import torch
+import numpy as np
 from stable_baselines3 import PPO
 from snake_env import SnakeEnv
 from tqdm import tqdm
 
 # Initialize the Snake environment
 env = SnakeEnv()
+# Verify the observation space
+print(f"Observation space: {env.observation_space.shape}")  # Should print (5,)
 
-# Define the action space (0: up, 1: down, 2: left, 3: right)
+# Train the RL agent using PPO
+model = PPO("MlpPolicy", env, verbose=1, device="cpu")
+print("🚀 Training the RL agent...")
+model.learn(total_timesteps=10000, progress_bar=True)
+print("✅ Training completed!")
+
+# Save the policy weights
+policy_weights = {k: v.tolist() for k, v in model.policy.state_dict().items()}
+print(f"Shape of first layer weights: {np.array(policy_weights['mlp_extractor.policy_net.0.weight']).shape}")  # Debug
+with open("snake_policy_weights.json", "w") as f:
+    json.dump(policy_weights, f)
+print("✅ Policy weights saved to snake_policy_weights.json")
+
+# Save the action space
 action_space = {
     "actions": ["up", "down", "left", "right"],
     "num_actions": 4
 }
-
-# Save the action space to a JSON file
 with open("snake_action_space.json", "w") as f:
     json.dump(action_space, f)
 print("✅ Action space saved to snake_action_space.json")
-
-# Train the RL agent using PPO
-model = PPO("MlpPolicy", env, verbose=1, device="cpu")  # Force CPU usage
-print("🚀 Training the RL agent...")
-# Define total timesteps
-total_timesteps = int(1e10)
-total_timesteps = 100000
-
-# Create a progress bar
-with tqdm(total=total_timesteps, desc="Training Progress", unit="step") as pbar:
-    def callback(_locals, _globals):
-        pbar.n = _locals["self"].num_timesteps
-        pbar.update(0)
-        return True
-
-    # Train the model with the callback
-    model.learn(total_timesteps=total_timesteps, callback=callback)
-print("✅ Training completed!")
-
-# Save the trained model using stable-baselines3's save method
-model.save("snake_rl_agent")
-print("✅ Trained RL agent saved to snake_rl_agent.zip")
-
-# Extract and save the policy weights
-policy = model.policy
-torch.save(policy, "snake_policy_full.pth")
-print("✅ Policy weights saved to snake_policy_full.pth")
-
-# Test the trained model
-# print("🎮 Testing the trained agent...")
-# obs = env.reset()
-# done = False
-# while not done:
-#     action, _ = model.predict(obs)
-#     obs, reward, done, info = env.step(action)
-#     env.render()

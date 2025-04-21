@@ -1,64 +1,58 @@
-import pygame
-import sys
-import random
-import time
 import json
-import pickle
+import numpy as np
+import pygame
+import random
 
-# pygbag only degbug statemtents
-# Uncomment the following line if you want to use pygbag for debugging
-# import js
-
-# js.console.log("This is a debug message")
-
-from RL_agent import SimpleAgent
-
-from scripts import snake_mechanics
+# Load the policy weights from the JSON file
+with open("snake_policy_weights.json", "r") as f:
+    policy_weights = json.load(f)
+policy_weights = {k: np.array(v) for k, v in policy_weights.items()}
+print("✅ Policy weights loaded successfully!")
 
 # Load the action space
-with open("action_space.json", "r") as f:
-    action_space_data = json.load(f)
-num_actions = action_space_data["num_actions"]
-print(f"✅ Action space loaded: {num_actions} actions")
+with open("snake_action_space.json", "r") as f:
+    action_space = json.load(f)
+print(f"✅ Action space loaded: {action_space['num_actions']} actions")
 
-# Load the RL agent
-with open("rl_agent.pkl", "rb") as f:
-    agent = pickle.load(f)
-print("✅ RL agent loaded successfully!")
+# Define a lightweight policy class
+class SnakePolicy:
+    def __init__(self, weights):
+        self.weights = weights
+
+        # Transpose the weights for the first layer to match the expected input shape
+        self.weights["mlp_extractor.policy_net.0.weight"] = np.array(self.weights["mlp_extractor.policy_net.0.weight"]).T
+
+        # Transpose the weights for the final layer to match the expected input shape
+        self.weights["action_net.weight"] = np.array(self.weights["action_net.weight"]).T
+
+    def forward(self, x):
+        # Implement the forward pass manually using numpy
+        x = np.dot(x, self.weights["mlp_extractor.policy_net.0.weight"]) + self.weights["mlp_extractor.policy_net.0.bias"]
+        x = np.maximum(0, x)  # ReLU
+        x = np.dot(x, self.weights["mlp_extractor.policy_net.2.weight"]) + self.weights["mlp_extractor.policy_net.2.bias"]
+        x = np.maximum(0, x)  # ReLU
+        x = np.dot(x, self.weights["action_net.weight"]) + self.weights["action_net.bias"]
+        return x
+    
+policy = SnakePolicy(policy_weights)
+
+# Preprocess the observation to match the input size of the policy network
+# Preprocess the observation to match the input size of the policy network
+def preprocess_observation(observation):
+    # No padding is needed; return the observation as is
+    return np.expand_dims(observation, axis=0)  # Add batch dimension
 
 # Initialize Pygame
 pygame.init()
 
-#------------------define all the mechanics------------------#
-def reset_game():
-    global snake, food_x, food_y, current_direction, running, game_over, score
-    snake = [(5, 5)]
-    food_x = random.randint(0, NUM_COLS - 1)
-    food_y = random.randint(0, NUM_ROWS - 1)
-    current_direction = "right"
-    running = True
-    game_over = False
-    score = 0
-
-
-#----------------END of defining all the mechanics------------------#
-
-
-#------------------define all the variables------------------#
-
-# Set up the screen
+# Constants
+GRID_SIZE = 30
 WIDTH = 1200
 HEIGHT = 900
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-
-# grid mechanics
-GRID_SIZE = 30  # Size of each grid cell in pixels
 NUM_ROWS = HEIGHT // GRID_SIZE
 NUM_COLS = WIDTH // GRID_SIZE
 
-
-# Define colors
+# Colors
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
@@ -67,31 +61,21 @@ GREEN = (0, 255, 0)
 # Clock to control FPS
 clock = pygame.time.Clock()
 
+# Initialize the game state
+def reset_game():
+    global snake, food_x, food_y, direction, score, running, game_over
+    snake = [(5, 5)]
+    food_x = random.randint(0, NUM_COLS - 1)
+    food_y = random.randint(0, NUM_ROWS - 1)
+    direction = "right"
+    score = 0
+    running = True
+    game_over = False
 
-# Snake and food initial positions
-snake = [(5, 5)] # list to track snake body positions
-score = 0
-food_x = random.randint(0, NUM_COLS - 1)
-food_y = random.randint(0, NUM_ROWS - 1)
-
-current_direction = "right"
-
-
-# Initialize game sate
-game_over = False
-running = True
-#----------------END of defining all variables------------------#
-
-
-
-
-# Full screen for deployment
-# screen_info = pygame.display.Info()
-# screen = pygame.display.set_mode((screen_info.current_w, screen_info.current_h))
+# Main game loop
+reset_game()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("AI-Plays-Snake")
-
-
-
 
 print("Starting the game")
 while True:
@@ -102,61 +86,61 @@ while True:
                 running = False
 
         # Fill the screen with white
-        screen.fill(WHITE)    
-        
-        
+        screen.fill(WHITE)
+
         # Draw the snake
         for segment in snake:
             pygame.draw.rect(screen, BLUE, (segment[0] * GRID_SIZE, segment[1] * GRID_SIZE, GRID_SIZE, GRID_SIZE))
-    
+
         # Draw the food
         pygame.draw.rect(screen, RED, (food_x * GRID_SIZE, food_y * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+
+        # Get the current observation
+        head_x, head_y = snake[0]
+        observation = np.array([head_x, head_y, food_x, food_y, len(snake)], dtype=np.float32)
+
+        # Preprocess the observation
+        observation = preprocess_observation(observation)
+
+        # Predict the action using the policy
+        action_probs = policy.forward(observation)
+        action = np.argmax(action_probs)  # Get the action with the highest probability
         
-        # # Simulate the agent's actions
-        # observation = [x / WIDTH, y / HEIGHT, food_x / WIDTH, food_y / HEIGHT]  # Normalize positions
-        # action = agent.predict(observation)
-        # print(f"Agent chose action: {action}")
-        keys = pygame.key.get_pressed()
-        
-        directions = [keys[pygame.K_a], keys[pygame.K_d], keys[pygame.K_w], keys[pygame.K_s]]
-        current_direction = snake_mechanics.get_direction(directions, current_direction)
+        print(f"Action: {action}")
         
         # Update snake position based on direction
-        head_x, head_y = snake[0]
-        if current_direction == "right":
+        if action == 0 and direction != "down":
+            direction = "up"
+        elif action == 1 and direction != "up":
+            direction = "down"
+        elif action == 2 and direction != "right":
+            direction = "left"
+        elif action == 3 and direction != "left":
+            direction = "right"
+
+        # Calculate new head position
+        if direction == "right":
             head_x += 1
-        elif current_direction == "left":
+        elif direction == "left":
             head_x -= 1
-        elif current_direction == "up":
+        elif direction == "up":
             head_y -= 1
-        elif current_direction == "down":
+        elif direction == "down":
             head_y += 1
-        
+
         # Check for collision with the edges (Game Over)
         if head_x < 0 or head_x >= NUM_COLS or head_y < 0 or head_y >= NUM_ROWS:
             running = False
             game_over = True
-            
+
         # Check for collision with the snake's own body (Game Over)
         if (head_x, head_y) in snake:
             running = False
             game_over = True
-  
+
         # Add the new head position to the snake
         snake.insert(0, (head_x, head_y))
 
-        
-
-        # # Simulate the environment for 10 timesteps
-        # for step in range(10):
-        #     observation = [0.0, 0.1, 0.2, 0.3]  # Dummy observation for testing
-        #     action = agent.predict(observation)
-        #     # print(f"Step {step + 1}: Agent chose action {action}")
-
-        # time.sleep(1)  # Slow down the loop for better visibility
-
-        
-        
         # Check for collision with food
         if head_x == food_x and head_y == food_y:
             food_x = random.randint(0, NUM_COLS - 1)
@@ -166,7 +150,6 @@ while True:
             # Remove the last segment of the snake to maintain its length
             snake.pop()
 
-        
         # Display the score on the screen
         font_score = pygame.font.Font(None, 36)  # Font for the score
         score_text = font_score.render(f"Score: {score}", True, GREEN)
@@ -177,7 +160,7 @@ while True:
 
         # Cap the frame rate
         clock.tick(10)
-    
+
     # Handle game over state
     while game_over:
         screen.fill(WHITE)
@@ -196,11 +179,11 @@ while True:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_r]:  # Restart the game
             reset_game()
-        
+
         if keys[pygame.K_q]:  # Quit the game
             pygame.quit()
-            sys.exit()
+            exit()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
+                exit()
