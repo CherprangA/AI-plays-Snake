@@ -9,7 +9,8 @@ Length of the snake
 
 Pros:
 ```
-Simple observation space 
+Simple observation space
+train on CPU and test on CPU
 ```
 
 Cons:
@@ -22,10 +23,11 @@ the current version of code doesn't work with `pygabg` so, can't run on broswer
 
 Updates I want to make:
 ```
-Update the code to run using CUDA
+update the code to work with pygbag
+Update the code to train using CUDA, since the web can't use CUDA, the test / run will still be on CPU / WEB
+Update the code to read model trained on CUDA but can run on CPU / WEB
 Update the observation space to include the snake body locations
 Update the rewards system
-update the code to work with pygbag
 ```
 
 THE END
