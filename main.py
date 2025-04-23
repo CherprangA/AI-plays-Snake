@@ -2,6 +2,24 @@ import pygame
 import random
 import heapq  # For priority queue used in A* search
 
+
+"""
+A little intro about A* + Flood Fill algorithms:
+
+- The A* algorithm is used to find the shortest path from the snake's head to the food. 
+- It uses a priority queue to explore nodes based on their cost (g + h), 
+    
+    where g is the cost to reach the node
+    h is the heuristic (Manhattan distance to the goal)
+    
+    If a path is found, the snake follows it step by step.
+
+- The flood fill algorithm is used to determine the safety of a move by simulating the reachable area from the snake's next position.
+- It ensures that the snake does not trap itself by moving into a region with insufficient space to accommodate its body.
+
+Together, A* ensures the snake moves toward the food efficiently, while flood fill ensures the move is safe and avoids self-collision or dead ends.
+"""
+
 # Initialize Pygame
 pygame.init()
 
@@ -21,11 +39,19 @@ GREEN = (0, 255, 0)  # Score text color
 # Clock to control FPS
 clock = pygame.time.Clock()
 
-# Snake and food initialization
-snake = [(10, 10)]  # Snake starts in the middle of the grid
-direction = (0, -1)  # Initial direction (up)
-food = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))  # Random food position
-score = 0  # Initial score
+# Function to reset the game state
+def reset_game():
+    """Reset the game to its initial state."""
+    global snake, direction, food, score, running, game_over
+    snake = [(10, 10)]  # Snake starts in the middle of the grid
+    direction = (0, -1)  # Initial direction (up)
+    food = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))  # Random food position
+    score = 0  # Reset score
+    running = True
+    game_over = False
+
+# Initialize game state
+reset_game()
 
 # Heuristic function for A* (Manhattan distance)
 def heuristic(a, b):
@@ -110,13 +136,25 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("AI-Plays-Snake")
 
 print("Starting the game")
-running = True
 
-while running:
+while True:
     pygame.event.pump()  # Process events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:  # Quit the game
-            running = False
+            pygame.quit()
+            exit()
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_r and game_over:
+            # Restart the game if 'R' is pressed after game over
+            reset_game()
+
+    if not running:
+        # Display "Game Over" message and wait for 'R' to restart
+        screen.fill(WHITE)
+        font_game_over = pygame.font.Font(None, 48)
+        game_over_text = font_game_over.render("Game Over! Press R to Restart", True, RED)
+        screen.blit(game_over_text, (WIDTH // 4, HEIGHT // 2))
+        pygame.display.update()
+        continue
 
     # Fill the screen with white
     screen.fill(WHITE)
@@ -178,6 +216,7 @@ while running:
     if new_head in snake[1:] or new_head[0] < 0 or new_head[0] >= GRID_WIDTH or new_head[1] < 0 or new_head[1] >= GRID_HEIGHT:
         print(f"Game Over! Final Score: {score}")
         running = False
+        game_over = True
 
     # Display the score on the screen
     font_score = pygame.font.Font(None, 36)
@@ -189,5 +228,3 @@ while running:
 
     # Cap the frame rate
     clock.tick(60)
-
-pygame.quit()
