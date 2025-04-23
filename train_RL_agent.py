@@ -1,26 +1,28 @@
 import json
 import numpy as np
 from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.env_checker import check_env
 from snake_env import SnakeEnv
-from tqdm import tqdm
 
 # Initialize the Snake environment
 env = SnakeEnv()
-# Verify the observation space
-print(f"Observation space: {env.observation_space.shape}")  # Should print (5,)
 
-# Train the RL agent using PPO
-model = PPO("MlpPolicy", env, verbose=1, device="cpu")
+# Check if the environment is valid
+check_env(env)
+
+# Wrap the environment for vectorized training
+vec_env = make_vec_env(lambda: env, n_envs=1)
+
+# Train the RL agent using PPO with CnnPolicy
+model = PPO("CnnPolicy", vec_env, verbose=1, device="auto", policy_kwargs={"normalize_images": False})
 print("🚀 Training the RL agent...")
 model.learn(total_timesteps=10000, progress_bar=True)
 print("✅ Training completed!")
 
 # Save the policy weights
-policy_weights = {k: v.tolist() for k, v in model.policy.state_dict().items()}
-print(f"Shape of first layer weights: {np.array(policy_weights['mlp_extractor.policy_net.0.weight']).shape}")  # Debug
-with open("snake_policy_weights.json", "w") as f:
-    json.dump(policy_weights, f)
-print("✅ Policy weights saved to snake_policy_weights.json")
+model.save("snake_cnn_policy")
+print("✅ Policy saved to snake_cnn_policy.zip")
 
 # Save the action space
 action_space = {
