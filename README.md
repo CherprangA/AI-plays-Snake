@@ -1,6 +1,15 @@
+<div align="center">
+
+###### ------>ACTIVITY PAUSED<------
+I have realized that my understanding of neural networks and reinforcement learning is not sufficient for this project at the moment. I plan to resume once I have gained more knowledge in these areas.  
+
+In the meantime, you can still view the demo, which currently uses the A* + Flood-fill approach.  
+
+</div>
+
 # AI-plays-Snake
 
-[Play the demo](https://cherpranga.github.io/AI-plays-Snake/)
+[Watch the demo](https://cherpranga.github.io/AI-plays-Snake/)
 
 ## Description
 
